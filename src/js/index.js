@@ -1,5 +1,5 @@
-
 import { fetchBreeds, fetchCatByBreed } from './cat-api';
+import Notiflix from 'notiflix';
 
 
 const breedSelect = document.querySelector('.breed-select');
@@ -7,33 +7,31 @@ const loader = document.querySelector('.loader');
 const error = document.querySelector('.error');
 const catInfo = document.querySelector('.cat-info');
 
-
 function showLoader() {
   loader.style.display = 'block';
 }
-
 
 function hideLoader() {
   loader.style.display = 'none';
 }
 
-
 function showError() {
-  error.classList.add('show');
+  error.style.display = 'block';
 }
-
 
 function hideError() {
-  error.classList.remove('show');
+  error.style.display = 'none';
 }
 
+function onFetchError(error) {
+  Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!');
+}
 
 function toggleLoadingElements(loading) {
   breedSelect.disabled = loading;
   catInfo.style.display = loading ? 'none' : 'block';
   loader.style.display = loading ? 'block' : 'none';
 }
-
 
 function populateBreedsSelect(breeds) {
   breeds.forEach(breed => {
@@ -43,14 +41,12 @@ function populateBreedsSelect(breeds) {
     breedSelect.appendChild(option);
   });
 
-
-    new SlimSelect({
-      select: breedSelect,
-      showSearch: false,
-      placeholder: 'Select Breed'
-    });
-  }
-
+  new SlimSelect({
+    select: breedSelect,
+    showSearch: false,
+    placeholder: 'Select Breed'
+  });
+}
 
 function showCatInfo(catInfoData) {
   catInfo.innerHTML = `
@@ -61,11 +57,9 @@ function showCatInfo(catInfoData) {
   `;
 }
 
-
 function clearCatInfo() {
   catInfo.innerHTML = '';
 }
-
 
 function onBreedSelectChange() {
   const selectedBreedId = breedSelect.value;
@@ -76,24 +70,24 @@ function onBreedSelectChange() {
     hideError();
 
     fetchCatByBreed(selectedBreedId)
-    .then(data => {
-            const catData = data[0];
-      const breed = catData.breeds[0];
-      const catInfo = {
-        name: breed.name,
-        description: breed.description,
-        temperament: breed.temperament,
-        image: catData.url,
-      };
-      return catInfo;
-    })
+      .then(data => {
+        const catData = data[0];
+        const breed = catData.breeds[0];
+        const catInfo = {
+          name: breed.name,
+          description: breed.description,
+          temperament: breed.temperament,
+          image: catData.url,
+        };
+        return catInfo;
+      })
       .then(catInfoData => {
         showCatInfo(catInfoData);
         toggleLoadingElements(false);
       })
       .catch((error) => {
-        console.log(error)
-        showError();
+        console.log(error);
+        onFetchError(error); 
         toggleLoadingElements(false);
       });
   } else {
@@ -101,24 +95,19 @@ function onBreedSelectChange() {
   }
 }
 
-
 breedSelect.addEventListener('change', onBreedSelectChange);
 
-
-toggleLoadingElements(true);
+hideError();
 
 fetchBreeds()
-   .then(data => data.map(breed => ({ id: breed.id, name: breed.name })))
-   .then(breeds => {
-    breedSelect.style.display = 'block'
+  .then(data => data.map(breed => ({ id: breed.id, name: breed.name })))
+  .then(breeds => {
+    breedSelect.style.display = 'block';
     populateBreedsSelect(breeds);
     toggleLoadingElements(false);
   })
   .catch((error) => {
-    console.log(error)
+    console.log(error);
     showError();
     toggleLoadingElements(false);
   });
-
-
-hideError()
